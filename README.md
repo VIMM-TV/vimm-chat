@@ -1,72 +1,69 @@
 # VIMM Chat
 
-VIMM Chat is a dedicated chat server and implementation designed for real-time stream interaction within the VIMM ecosystem. It provides a scalable, feature-rich chat solution that integrates with Hive authentication and VIMM Core streaming services.
+Chat server for the VIMM framework. This component provides real-time chat functionality that can be embedded in the main VIMM frontend or used standalone.
 
-## VIMM Ecosystem
+## Features
+* Real-time chat using Socket.IO
+* Embeddable chat interface for the VIMM frontend
+* Standalone chat page for direct access
+* Chat history persistence
+* Support for channel-specific chat configuration
+* Integration with VIMM Core API for stream verification
 
-VIMM Chat is part of a larger ecosystem of components:
+## Requirements
+* Node.js 14+
+* PostgreSQL for production (SQLite supported for development/testing)
 
-- [VIMM Core](https://github.com/VIMM-TV/vimm-core) - Core streaming server with multi-protocol support
-- **VIMM Chat** (this repository) - Chat server and implementation for real-time stream interaction
-- [VIMM Frontend](https://github.com/VIMM-TV/vimm-frontend) - Reference frontend application integrating all VIMM components
+## Installation
+1. Clone the repository:
+   ```
+   git clone https://github.com/VIMM-TV/vimm-chat.git
+   cd vimm-chat
+   ```
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Create a .env file based on .env.example:
+   ```
+   cp .env.example .env
+   ```
+   Edit .env to match your environment
+4. Start the server:
+   ```
+   npm start
+   ```
 
-## Planned Features
-
-### Core Chat Functionality
-- Real-time message delivery
-- Room-based chat architecture
-- Message history and caching
-- User presence detection
-- Typing indicators
-
-### Stream Integration
-- Automatic room creation based on active streams
-- Stream status synchronization
-- Broadcaster-specific features
-- Moderator tools
-
-### Authentication & Authorization
-- Hive blockchain authentication
-- Role-based permissions
-  - Broadcasters
-  - Moderators
-  - Viewers
-- Integration with VIMM Core authentication
-
-### Moderation Features
-- User timeout/ban system
-- Message deletion
-- Spam protection
-- Automated content filtering
-- Moderation logs
-
-### WebSocket Integration
-- Secure WebSocket connections
-- Connection state management
-- Automatic reconnection handling
-- Event-based message system
-
-## Architecture
-
+## Development
+For development with hot reloading:
 ```
-src/
-├── server/            # Chat server implementation
-│   ├── rooms/
-│   ├── messages/
-│   └── presence/
-├── auth/              # Authentication and authorization
-│   ├── hive/
-│   └── roles/
-├── moderation/        # Moderation tools and systems
-│   ├── filters/
-│   ├── actions/
-│   └── logs/
-├── integration/       # Integration with other VIMM components
-│   ├── core/
-│   └── frontend/
-├── utils/             # Utility functions
-└── config/            # Configuration management
+npm run dev
 ```
+
+## Testing
+Run tests with:
+```
+npm test
+```
+
+## Usage
+
+### Accessing the Chat
+The chat interface can be accessed directly at:
+```
+http://<domain>:<port>/chat/<channel_hive_username>
+```
+
+### Embedding in VIMM Frontend
+The chat can be embedded in the VIMM frontend using an iframe:
+```html
+<iframe src="http://<domain>:<port>/chat/<channel_hive_username>" width="100%" height="600px" frameborder="0"></iframe>
+```
+
+### API Routes
+* GET /api/chat/messages/:hiveAccount - Get chat history for a specific channel
+* POST /api/chat/messages/:hiveAccount - Post a new message to a channel
+* GET /api/chat/config/:hiveAccount - Get chat configuration for a specific channel
 
 ## Development Status
 
