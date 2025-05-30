@@ -158,7 +158,7 @@ initializeDb().then(() => {
   console.log('Database connected');
   
   // Start HTTPS server
-  const port = process.env.HTTPS_PORT || 443;
+  const port = process.env.HTTPS_PORT || 4443;
   server.listen(port, () => {
     console.log(`HTTPS Server running on port ${port}`);
     console.log(`WSS enabled for Socket.IO connections`);
