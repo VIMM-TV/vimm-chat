@@ -4,33 +4,35 @@
     "description": "Chat server for the VIMM framework",
     "main": "src/index.js",
     "scripts": {
-      "start": "node src/index.js",
-      "dev": "nodemon src/index.js",
-      "test": "NODE_ENV=test jest"
+        "start": "node src/index.js",
+        "dev": "nodemon src/index.js",
+        "test": "NODE_ENV=test jest"
     },
     "repository": {
-      "type": "git",
-      "url": "git+https://github.com/VIMM-TV/vimm-chat.git"
+        "type": "git",
+        "url": "git+https://github.com/VIMM-TV/vimm-chat.git"
     },
     "keywords": [
-      "vimm",
-      "chat",
-      "streaming"
+        "vimm",
+        "chat",
+        "streaming"
     ],
     "dependencies": {
-      "axios": "^1.6.5",
-      "cors": "^2.8.5",
-      "dotenv": "^16.3.1",
-      "ejs": "^3.1.9",
-      "express": "^4.18.2",
-      "sequelize": "^6.35.2",
-      "socket.io": "^4.7.3",
-      "pg": "^8.11.3",
-      "pg-hstore": "^2.3.4",
-      "sqlite3": "^5.1.6"
+        "@hiveio/dhive": "^1.3.2",
+        "axios": "^1.6.5",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "ejs": "^3.1.9",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.2",
+        "pg": "^8.11.3",
+        "pg-hstore": "^2.3.4",
+        "sequelize": "^6.35.2",
+        "socket.io": "^4.7.3",
+        "sqlite3": "^5.1.6"
     },
     "devDependencies": {
-      "jest": "^29.7.0",
-      "nodemon": "^3.0.2"
+        "jest": "^29.7.0",
+        "nodemon": "^3.0.2"
     }
-  }
+}

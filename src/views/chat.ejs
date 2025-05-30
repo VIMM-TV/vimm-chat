@@ -29,6 +29,7 @@
             display: flex;
             flex-direction: column;
             max-width: 100%;
+            width: 100%;
             margin: 0 auto;
             height: 100%;
         }
@@ -155,140 +156,19 @@
         </form>
     </div>
     
-    <div id="username-modal">
+    <div id="username-modal" role="dialog" aria-modal="true">
         <div class="modal-content">
-            <h2>Enter your username</h2>
-            <p>Choose a username to chat in <%= hiveAccount %>'s channel</p>
-            <input type="text" id="username-input" placeholder="Username">
-            <button id="start-chat-button">Start Chatting</button>
+            <h2>Authenticate with Hive</h2>
+            <p>Enter your Hive username and sign with Keychain to chat in <%= hiveAccount %>'s channel</p>
+            <input type="text" id="username-input" placeholder="Hive Username">
+            <button id="auth-hive-button">Authenticate with Hive Keychain</button>
+            <p style="font-size: 0.8em; margin-top: 16px;">
+                Don't have Hive Keychain? <a href="https://hive-keychain.com/" target="_blank">Download it here</a>
+            </p>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        // Store DOM elements
-        const chatForm = document.getElementById('chat-form');
-        const messageInput = document.getElementById('message-input');
-        const chatMessages = document.getElementById('chat-messages');
-        const usernameModal = document.getElementById('username-modal');
-        const usernameInput = document.getElementById('username-input');
-        const startChatButton = document.getElementById('start-chat-button');
-        
-        // Chat parameters
-        const hiveAccount = '<%= hiveAccount %>';
-        let username = localStorage.getItem(`vimm-chat-username-${hiveAccount}`) || '';
-        let chatConfig = null;
-
-        // Connect to Socket.io
-        const socket = io();
-        const chatRoom = `chat-${hiveAccount}`;
-        
-        // Check if username is already set
-        if (username) {
-            usernameModal.style.display = 'none';
-            socket.emit('join-room', chatRoom);
-            loadChatHistory();
-            loadChatConfig();
-        }
-        
-        // Handle username submit
-        startChatButton.addEventListener('click', () => {
-            username = usernameInput.value.trim();
-            if (username) {
-                localStorage.setItem(`vimm-chat-username-${hiveAccount}`, username);
-                usernameModal.style.display = 'none';
-                socket.emit('join-room', chatRoom);
-                loadChatHistory();
-                loadChatConfig();
-            }
-        });
-        
-        // Handle chat message submission
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const message = messageInput.value.trim();
-            if (!message) return;
-            
-            // Emit message to server
-            socket.emit('chat-message', {
-                room: chatRoom,
-                username,
-                message,
-                hiveAccount
-            });
-            
-            // Save message to database via API
-            fetch(`/api/chat/messages/${hiveAccount}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username,
-                    message
-                })
-            }).catch(error => console.error('Error saving message:', error));
-            
-            // Clear input
-            messageInput.value = '';
-            messageInput.focus();
-        });
-        
-        // Load chat history from API
-        async function loadChatHistory() {
-            try {
-                const response = await fetch(`/api/chat/messages/${hiveAccount}`);
-                const messages = await response.json();
-                
-                // Clear existing messages
-                chatMessages.innerHTML = '';
-                
-                // Add messages to chat
-                messages.forEach(msg => {
-                    addMessageToChat(msg.username, msg.message, new Date(msg.timestamp));
-                });
-                
-                // Scroll to bottom
-                scrollToBottom();
-            } catch (error) {
-                console.error('Error loading chat history:', error);
-            }
-        }
-        
-        // Load chat configuration
-        async function loadChatConfig() {
-            try {
-                const response = await fetch(`/api/chat/config/${hiveAccount}`);
-                chatConfig = await response.json();
-                
-                // Apply chat configuration (slow mode, etc.)
-                if (chatConfig.slowMode) {
-                    // Implement slow mode functionality
-                    const interval = chatConfig.slowModeInterval || 3;
-                    messageInput.disabled = false;
-                    
-                    chatForm.addEventListener('submit', () => {
-                        messageInput.disabled = true;
-                        setTimeout(() => {
-                            messageInput.disabled = false;
-                        }, interval * 1000);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading chat config:', error);
-            }
-        }
-        
-        // Listen for chat messages from the server
-        socket.on('chat-message', (data) => {
-            addMessageToChat(data.username, data.message, new Date(data.timestamp));
-            scrollToBottom();
-        });
-        
-        // Add a message to the chat display
-        function addMessageToChat(username, message, timestamp) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            
-            const formattedTime = timestamp.toLocaleTimeString([], { hour: '2-digit', minute:
+    <script src="/js/chat.js"></script>
+</body>
+</html>

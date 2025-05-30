@@ -3,7 +3,9 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 const socketIo = require('socket.io');
+const jwt = require('jsonwebtoken');
 const { initializeDb } = require('./db/models');
+const { chatMessages, authenticatedUsers, getMessagesForAccount } = require('./storage');
 
 // Initialize Express app
 const app = express();
@@ -37,25 +39,102 @@ app.get('/chat/:hiveAccount', (req, res) => {
   res.render('chat', { hiveAccount });
 });
 
+// JWT Secret (should match the one in chat routes)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
+
 // Socket.io handling for real-time chat
 io.on('connection', socket => {
   console.log('New client connected');
   
+  let userToken = null;
+  let userData = null;
+  
   // Join a specific chat room based on the channel
-  socket.on('join-room', (room) => {
-    socket.join(room);
-    console.log(`Client joined room: ${room}`);
+  socket.on('join-room', (data) => {
+    const { room, token } = data;
+    
+    // Verify token if provided
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const authData = authenticatedUsers.get(token);
+        
+        if (authData) {
+          userToken = token;
+          userData = authData;
+          socket.join(room);
+          console.log(`Authenticated user ${userData.username} joined room: ${room}`);
+        } else {
+          console.log('Invalid token for room join');
+          socket.emit('auth-error', { error: 'Invalid token' });
+          return;
+        }
+      } catch (error) {
+        console.log('Token verification failed for room join:', error.message);
+        socket.emit('auth-error', { error: 'Invalid token' });
+        return;
+      }
+    } else {
+      socket.join(room);
+      console.log(`Client joined room: ${room}`);
+    }
   });
   
   // Handle chat messages
   socket.on('chat-message', (data) => {
-    // Broadcast to all in the room
-    io.to(data.room).emit('chat-message', {
-      username: data.username,
-      message: data.message,
-      timestamp: new Date(),
-      hiveAccount: data.hiveAccount
-    });
+    const { room, message, token } = data;
+    
+    // Verify authentication
+    if (!token) {
+      socket.emit('error', { error: 'Authentication required' });
+      return;
+    }
+    
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const authData = authenticatedUsers.get(token);
+      
+      if (!authData) {
+        socket.emit('error', { error: 'Invalid token' });
+        return;
+      }
+      
+      // Extract hiveAccount from room name (format: chat-{hiveAccount})
+      const hiveAccount = room.replace('chat-', '');
+      
+      // Create new message object
+      const newMessage = {
+        id: Date.now().toString(),
+        username: authData.username,
+        message: message.trim(),
+        timestamp: new Date().toISOString(),
+        hiveAccount,
+        verified: true
+      };
+      
+      // Store message in memory
+      const messages = getMessagesForAccount(hiveAccount);
+      messages.push(newMessage);
+      
+      // Keep only last 100 messages
+      if (messages.length > 100) {
+        messages.splice(0, messages.length - 100);
+      }
+      
+      // Broadcast to all in the room
+      io.to(room).emit('chat-message', {
+        username: authData.username,
+        message: message.trim(),
+        timestamp: new Date(),
+        hiveAccount
+      });
+      
+      console.log(`Message from ${authData.username} in ${hiveAccount}: ${message}`);
+      
+    } catch (error) {
+      console.log('Authentication failed for message:', error.message);
+      socket.emit('error', { error: 'Authentication failed' });
+    }
   });
   
   socket.on('disconnect', () => {
