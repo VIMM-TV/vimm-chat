@@ -13,8 +13,8 @@ const app = express();
 
 // HTTPS Server configuration
 const httpsOptions = {
-  key: fs.readFileSync(process.env.SSL_KEY_PATH || path.join(__dirname, '../../../myserver.key')),
-  cert: fs.readFileSync(process.env.SSL_CERT_PATH || path.join(__dirname, '../../../vimm_webhop_me.pem')),
+  key: fs.readFileSync(process.env.SSL_KEY_PATH || path.join(__dirname, '../../myserver.key')),
+  cert: fs.readFileSync(process.env.SSL_CERT_PATH || path.join(__dirname, '../../vimm_webhop_me.pem')),
   // Optional: if you have a certificate chain
   // ca: fs.readFileSync(process.env.SSL_CA_PATH || path.join(__dirname, '../certs/ca-bundle.pem'))
 };
