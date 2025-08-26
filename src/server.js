@@ -1,6 +1,5 @@
 const express = require('express');
-const https = require('https'); // Changed from http to https
-const fs = require('fs'); // Add fs to read certificate files
+const http = require('http');
 const path = require('path');
 const cors = require('cors');
 const socketIo = require('socket.io');
@@ -11,15 +10,7 @@ const { chatMessages, authenticatedUsers, getMessagesForAccount } = require('./s
 // Initialize Express app
 const app = express();
 
-// HTTPS Server configuration
-const httpsOptions = {
-  key: fs.readFileSync(process.env.SSL_KEY_PATH || path.join(__dirname, '../../myserver.key')),
-  cert: fs.readFileSync(process.env.SSL_CERT_PATH || path.join(__dirname, '../../vimm_webhop_me.pem')),
-  // Optional: if you have a certificate chain
-  // ca: fs.readFileSync(process.env.SSL_CA_PATH || path.join(__dirname, '../certs/ca-bundle.pem'))
-};
-
-const server = https.createServer(httpsOptions, app); // Use https.createServer with options
+const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
@@ -157,11 +148,11 @@ io.on('connection', socket => {
 initializeDb().then(() => {
   console.log('Database connected');
   
-  // Start HTTPS server
-  const port = process.env.HTTPS_PORT || 4443;
+  // Start HTTP server
+  const port = process.env.PORT || 3000;
   server.listen(port, () => {
-    console.log(`HTTPS Server running on port ${port}`);
-    console.log(`WSS enabled for Socket.IO connections`);
+    console.log(`HTTP Server running on port ${port}`);
+    console.log(`WebSocket enabled for Socket.IO connections`);
   });
 }).catch(err => {
   console.error('Database connection failed:', err);
