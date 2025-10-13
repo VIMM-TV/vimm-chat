@@ -63,24 +63,9 @@ io.on('connection', socket => {
   
   // Join a specific chat room based on the channel
   socket.on('join-room', (data) => {
-    // Handle both old format (string/array) and new format (object)
-    let room, token;
+    const { room, token } = data;
     
-    if (typeof data === 'string') {
-      // Old format: just room name as string
-      room = data;
-      token = null;
-    } else if (Array.isArray(data)) {
-      // Old format: room name in array
-      room = data[0];
-      token = data[1] || null;
-    } else if (typeof data === 'object') {
-      // New format: object with room and token
-      room = data.room;
-      token = data.token;
-    }
-    
-    console.log(`join-room event received:`, { data, parsedRoom: room, hasToken: !!token });
+    console.log(`join-room event received:`, { room, hasToken: !!token });
     
     if (!room) {
       console.error('No room specified in join-room event!');
