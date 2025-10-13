@@ -36,10 +36,8 @@ const initializeDb = async () => {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     
-    // Sync all models with alter to update schema if needed
-    // In production, you should use migrations instead
-    await sequelize.sync({ alter: true });
-    console.log('Database synchronized');
+    // Note: Table creation is handled by vimm-core
+    // Models are defined here but schema management is external
     
     return true;
   } catch (error) {
