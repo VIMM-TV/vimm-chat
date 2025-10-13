@@ -180,16 +180,40 @@ router.get('/config/:hiveAccount', async (req, res) => {
 
     // Create default config if none exists
     if (!config) {
-      config = await ChatConfig.create({
-        hiveAccount,
-        slowMode: false,
-        slowModeInterval: 3,
-        emoteOnly: false,
-        subscribersOnly: false,
-        followersOnly: false,
-        followersOnlyDuration: 0,
-        moderators: []
-      });
+      try {
+        config = await ChatConfig.create({
+          hiveAccount,
+          slowMode: false,
+          slowModeInterval: 3,
+          emoteOnly: false,
+          subscribersOnly: false,
+          followersOnly: false,
+          followersOnlyDuration: 0,
+          moderators: []
+        });
+        console.log(`Created default chat config for ${hiveAccount}`);
+      } catch (createError) {
+        // If creation fails, try to find it again in case of race condition
+        console.error('Error creating chat config:', createError);
+        config = await ChatConfig.findOne({
+          where: { hiveAccount }
+        });
+        
+        // If still not found, return default values without saving
+        if (!config) {
+          console.warn(`Unable to create or find config for ${hiveAccount}, returning defaults`);
+          return res.json({
+            hiveAccount,
+            slowMode: false,
+            slowModeInterval: 3,
+            emoteOnly: false,
+            subscribersOnly: false,
+            followersOnly: false,
+            followersOnlyDuration: 0,
+            moderators: []
+          });
+        }
+      }
     }
 
     res.json({
@@ -204,6 +228,7 @@ router.get('/config/:hiveAccount', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching chat config:', error);
+    console.error('Error details:', error.message, error.stack);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'Failed to fetch chat configuration' 
