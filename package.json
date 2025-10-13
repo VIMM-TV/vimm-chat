@@ -18,6 +18,10 @@
         "streaming"
     ],
     "dependencies": {
+<<<<<<< HEAD
+=======
+        "@hiveio/dhive": "^1.3.2",
+>>>>>>> a2462480988b920ce129ad003f3c7d49de388019
         "axios": "^1.6.5",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
