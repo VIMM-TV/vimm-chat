@@ -63,9 +63,20 @@ io.on('connection', socket => {
   
   // Join a specific chat room based on the channel
   socket.on('join-room', (data) => {
+    console.log('=== JOIN-ROOM EVENT RECEIVED ===');
+    console.log('Raw data:', data);
+    console.log('Data type:', typeof data);
+    console.log('Is object:', typeof data === 'object');
+    console.log('Has room:', 'room' in data);
+    console.log('Has token:', 'token' in data);
+    
     const { room, token } = data;
     
-    console.log(`join-room event received:`, { room, hasToken: !!token });
+    console.log('Room value:', room);
+    console.log('Token exists:', !!token);
+    if (token) {
+      console.log('Token preview:', token.substring(0, 20) + '...');
+    }
     
     if (!room) {
       console.error('No room specified in join-room event!');
@@ -77,28 +88,37 @@ io.on('connection', socket => {
     if (token) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const authData = authenticatedUsers.get(token);
+        userToken = token;
+        userData = decoded; // Store the decoded JWT data directly
+        socket.join(room);
+        console.log(`✅ Authenticated user ${decoded.hiveAccount} joined room: ${room}`);
+        console.log(`📊 Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
         
-        if (authData) {
-          userToken = token;
-          userData = authData;
-          socket.join(room);
-          console.log(`✅ Authenticated user ${userData.username} joined room: ${room}`);
-          console.log(`📊 Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
-        } else {
-          console.log('Invalid token for room join');
-          socket.emit('auth-error', { error: 'Invalid token' });
-          return;
-        }
+        // Send success confirmation to client
+        socket.emit('room-joined', { 
+          room, 
+          authenticated: true,
+          username: decoded.hiveAccount 
+        });
       } catch (error) {
         console.log('Token verification failed for room join:', error.message);
-        socket.emit('auth-error', { error: 'Invalid token' });
+        console.log('Error name:', error.name);
+        socket.emit('auth-error', { 
+          error: error.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token',
+          message: error.message 
+        });
         return;
       }
     } else {
       socket.join(room);
       console.log(`✅ Client joined room: ${room} (no auth)`);
       console.log(`📊 Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
+      
+      // Send success confirmation to client (unauthenticated)
+      socket.emit('room-joined', { 
+        room, 
+        authenticated: false 
+      });
     }
   });
   
@@ -114,12 +134,6 @@ io.on('connection', socket => {
     
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      const authData = authenticatedUsers.get(token);
-      
-      if (!authData) {
-        socket.emit('error', { error: 'Invalid token' });
-        return;
-      }
       
       // Extract hiveAccount from room name (format: chat-{hiveAccount})
       const hiveAccount = room.replace('chat-', '');
@@ -127,7 +141,7 @@ io.on('connection', socket => {
       // Create new message object
       const newMessage = {
         id: Date.now().toString(),
-        username: authData.username,
+        username: decoded.hiveAccount,
         message: message.trim(),
         timestamp: new Date().toISOString(),
         hiveAccount,
@@ -145,17 +159,20 @@ io.on('connection', socket => {
       
       // Broadcast to all in the room
       io.to(room).emit('chat-message', {
-        username: authData.username,
+        username: decoded.hiveAccount,
         message: message.trim(),
         timestamp: new Date(),
         hiveAccount
       });
       
-      console.log(`Message from ${authData.username} in ${hiveAccount}: ${message}`);
+      console.log(`Message from ${decoded.hiveAccount} in ${hiveAccount}: ${message}`);
       
     } catch (error) {
       console.log('Authentication failed for message:', error.message);
-      socket.emit('error', { error: 'Authentication failed' });
+      socket.emit('error', { 
+        error: error.name === 'TokenExpiredError' ? 'Token expired' : 'Authentication failed',
+        message: error.message 
+      });
     }
   });
   
