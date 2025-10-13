@@ -5,6 +5,11 @@ const cors = require('cors');
 const socketIo = require('socket.io');
 const { initializeDb } = require('./db/models');
 
+// Import models to ensure they're registered
+const ChatMessage = require('./db/models/chatMessage');
+const ChatConfig = require('./db/models/chatConfig');
+const BannedUser = require('./db/models/bannedUser');
+
 // Initialize Express app
 const app = express();
 const server = http.createServer(app);
