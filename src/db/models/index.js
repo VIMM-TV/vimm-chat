@@ -36,8 +36,9 @@ const initializeDb = async () => {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     
-    // Sync all models
-    await sequelize.sync();
+    // Sync all models with alter to update schema if needed
+    // In production, you should use migrations instead
+    await sequelize.sync({ alter: true });
     console.log('Database synchronized');
     
     return true;
