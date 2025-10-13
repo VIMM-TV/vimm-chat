@@ -110,15 +110,26 @@ router.post('/messages/:hiveAccount', authenticateToken, async (req, res) => {
 
     // Broadcast message to all Socket.IO clients in the room
     const io = getSocketIO();
-    console.log('Broadcasting message to Socket.IO clients:', {
+    const roomName = `chat-${hiveAccount}`;
+    
+    console.log('📡 Broadcasting message to Socket.IO clients:', {
       hasIO: !!io,
-      room: `chat-${hiveAccount}`,
+      room: roomName,
       username: chatMessage.username,
       message: chatMessage.message
     });
     
     if (io) {
-      io.to(`chat-${hiveAccount}`).emit('chat-message', {
+      const room = io.sockets.adapter.rooms.get(roomName);
+      const clientCount = room ? room.size : 0;
+      
+      console.log(`📊 Room "${roomName}" has ${clientCount} connected clients`);
+      
+      if (clientCount === 0) {
+        console.warn(`⚠️ WARNING: No clients in room "${roomName}" to receive the broadcast!`);
+      }
+      
+      io.to(roomName).emit('chat-message', {
         id: chatMessage.id,
         username: chatMessage.username,
         message: chatMessage.message,
@@ -126,7 +137,8 @@ router.post('/messages/:hiveAccount', authenticateToken, async (req, res) => {
         isModerator: chatMessage.isModerator,
         hiveAccount: chatMessage.hiveAccount
       });
-      console.log('Message broadcast complete');
+      
+      console.log(`✅ Message broadcast complete to ${clientCount} client(s)`);
     } else {
       console.error('Socket.IO instance not available for broadcasting!');
     }

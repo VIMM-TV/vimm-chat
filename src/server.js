@@ -63,7 +63,30 @@ io.on('connection', socket => {
   
   // Join a specific chat room based on the channel
   socket.on('join-room', (data) => {
-    const { room, token } = data;
+    // Handle both old format (string/array) and new format (object)
+    let room, token;
+    
+    if (typeof data === 'string') {
+      // Old format: just room name as string
+      room = data;
+      token = null;
+    } else if (Array.isArray(data)) {
+      // Old format: room name in array
+      room = data[0];
+      token = data[1] || null;
+    } else if (typeof data === 'object') {
+      // New format: object with room and token
+      room = data.room;
+      token = data.token;
+    }
+    
+    console.log(`join-room event received:`, { data, parsedRoom: room, hasToken: !!token });
+    
+    if (!room) {
+      console.error('No room specified in join-room event!');
+      socket.emit('error', { error: 'Room name is required' });
+      return;
+    }
     
     // Verify token if provided
     if (token) {
@@ -75,8 +98,8 @@ io.on('connection', socket => {
           userToken = token;
           userData = authData;
           socket.join(room);
-          console.log(`Authenticated user ${userData.username} joined room: ${room}`);
-          console.log(`Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
+          console.log(`✅ Authenticated user ${userData.username} joined room: ${room}`);
+          console.log(`📊 Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
         } else {
           console.log('Invalid token for room join');
           socket.emit('auth-error', { error: 'Invalid token' });
@@ -89,8 +112,8 @@ io.on('connection', socket => {
       }
     } else {
       socket.join(room);
-      console.log(`Client joined room: ${room} (no auth)`);
-      console.log(`Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
+      console.log(`✅ Client joined room: ${room} (no auth)`);
+      console.log(`📊 Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
     }
   });
   
