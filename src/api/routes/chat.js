@@ -18,6 +18,7 @@ const { Op } = require('sequelize');
 let io = null;
 const setSocketIO = (socketIO) => {
   io = socketIO;
+  console.log('Socket.IO instance set in chat routes:', !!io);
 };
 const getSocketIO = () => io;
 
@@ -109,6 +110,13 @@ router.post('/messages/:hiveAccount', authenticateToken, async (req, res) => {
 
     // Broadcast message to all Socket.IO clients in the room
     const io = getSocketIO();
+    console.log('Broadcasting message to Socket.IO clients:', {
+      hasIO: !!io,
+      room: `chat-${hiveAccount}`,
+      username: chatMessage.username,
+      message: chatMessage.message
+    });
+    
     if (io) {
       io.to(`chat-${hiveAccount}`).emit('chat-message', {
         id: chatMessage.id,
@@ -118,6 +126,9 @@ router.post('/messages/:hiveAccount', authenticateToken, async (req, res) => {
         isModerator: chatMessage.isModerator,
         hiveAccount: chatMessage.hiveAccount
       });
+      console.log('Message broadcast complete');
+    } else {
+      console.error('Socket.IO instance not available for broadcasting!');
     }
 
     res.status(201).json({

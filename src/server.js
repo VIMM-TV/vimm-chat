@@ -42,6 +42,8 @@ app.use('/api/chat', chatRoutes);
 
 // Pass Socket.IO instance to chat routes after initialization
 chatRoutes.setSocketIO(io);
+console.log('Socket.IO instance passed to chat routes');
+
 
 // Frontend Routes
 app.get('/chat/:hiveAccount', (req, res) => {
@@ -74,6 +76,7 @@ io.on('connection', socket => {
           userData = authData;
           socket.join(room);
           console.log(`Authenticated user ${userData.username} joined room: ${room}`);
+          console.log(`Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
         } else {
           console.log('Invalid token for room join');
           socket.emit('auth-error', { error: 'Invalid token' });
@@ -86,7 +89,8 @@ io.on('connection', socket => {
       }
     } else {
       socket.join(room);
-      console.log(`Client joined room: ${room}`);
+      console.log(`Client joined room: ${room} (no auth)`);
+      console.log(`Room ${room} now has ${io.sockets.adapter.rooms.get(room)?.size || 0} clients`);
     }
   });
   
