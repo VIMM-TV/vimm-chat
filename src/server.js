@@ -40,6 +40,9 @@ app.set('view engine', 'ejs');
 const chatRoutes = require('./api/routes/chat');
 app.use('/api/chat', chatRoutes);
 
+// Pass Socket.IO instance to chat routes after initialization
+chatRoutes.setSocketIO(io);
+
 // Frontend Routes
 app.get('/chat/:hiveAccount', (req, res) => {
   const { hiveAccount } = req.params;

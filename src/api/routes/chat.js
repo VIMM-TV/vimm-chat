@@ -14,6 +14,13 @@ const {
 } = require('../utils/moderation');
 const { Op } = require('sequelize');
 
+// Get Socket.IO instance (will be set by server.js)
+let io = null;
+const setSocketIO = (socketIO) => {
+  io = socketIO;
+};
+const getSocketIO = () => io;
+
 /**
  * GET /api/chat/messages/:hiveAccount
  * Get chat messages for a channel
@@ -99,6 +106,19 @@ router.post('/messages/:hiveAccount', authenticateToken, async (req, res) => {
       timestamp: new Date(),
       isModerator: moderator
     });
+
+    // Broadcast message to all Socket.IO clients in the room
+    const io = getSocketIO();
+    if (io) {
+      io.to(`chat-${hiveAccount}`).emit('chat-message', {
+        id: chatMessage.id,
+        username: chatMessage.username,
+        message: chatMessage.message,
+        timestamp: chatMessage.timestamp,
+        isModerator: chatMessage.isModerator,
+        hiveAccount: chatMessage.hiveAccount
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -685,3 +705,4 @@ router.post('/clear/:hiveAccount', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.setSocketIO = setSocketIO;
