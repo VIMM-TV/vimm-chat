@@ -66,9 +66,24 @@ io.on('connection', socket => {
     console.log('=== JOIN-ROOM EVENT RECEIVED ===');
     console.log('Raw data:', data);
     console.log('Data type:', typeof data);
-    console.log('Is object:', typeof data === 'object');
-    console.log('Has room:', 'room' in data);
-    console.log('Has token:', 'token' in data);
+    
+    // Validate data format
+    if (typeof data === 'string') {
+      // DEPRECATED: String format is not supported
+      console.error('❌ DEPRECATED: join-room received string instead of object');
+      console.error('Client should send: { room: "chat-xxx", token: "..." }');
+      socket.emit('error', { 
+        error: 'Invalid format: join-room expects an object with {room, token}',
+        deprecated: true 
+      });
+      return;
+    }
+    
+    if (typeof data !== 'object' || data === null) {
+      console.error('Invalid join-room data format:', data);
+      socket.emit('error', { error: 'Invalid room data format' });
+      return;
+    }
     
     const { room, token } = data;
     
